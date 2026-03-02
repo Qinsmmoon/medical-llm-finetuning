@@ -1,0 +1,8 @@
+modelscope
+datasets==2.21.0
+transformers
+peft
+accelerate
+tqdm
+oss2
+swanlab
