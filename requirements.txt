@@ -6,3 +6,5 @@ accelerate
 tqdm
 oss2
 swanlab
+pandas
+tabulate

@@ -484,56 +484,5 @@ def main():
     del model_dora, tokenizer_dora
     torch.cuda.empty_cache()
 
-    # -------------------- LLM-as-a-Judge 对比 --------------------
-    print("\n[步骤4] 进行 LLM-as-a-Judge 对比...")
-    # 准备测试问题（取验证集前5个问题作为测试样例）
-    test_questions = val_df["input"].tolist()[:5]  # 取前5个
-    print(f"测试问题: {test_questions}")
-
-    # 生成三个模型的回答
-    print("生成基座模型回答...")
-    base_infer = QwenInference(base_model_name='./autodl-tmp/Qwen/Qwen3-1.7B', lora_adapter_path=None)
-    base_responses = [base_infer.generate_response(q) for q in test_questions]
-
-    print("生成 LoRA 模型回答...")
-    lora_infer = QwenInference(base_model_name='./autodl-tmp/Qwen/Qwen3-1.7B',
-                               lora_adapter_path=os.path.join(lora_output_dir, "final_adapter"))
-    lora_responses = [lora_infer.generate_response(q) for q in test_questions]
-
-    print("生成 DoRA 模型回答...")
-    dora_infer = QwenInference(base_model_name='./autodl-tmp/Qwen/Qwen3-1.7B',
-                               lora_adapter_path=os.path.join(dora_output_dir, "final_adapter"))
-    dora_responses = [dora_infer.generate_response(q) for q in test_questions]
-
-    # 裁判评估
-    judge_results = judge_evaluation(test_questions, base_responses, lora_responses, dora_responses)
-
-    # 输出结果
-    print("\n" + "=" * 60)
-    print("LLM-as-a-Judge 对比结果")
-    print("平均分:")
-    for model, score in judge_results["avg_scores"].items():
-        print(f"  {model}: {score:.2f}")
-    print("\n最佳回答次数:")
-    for model, count in judge_results["best_counts"].items():
-        print(f"  {model}: {count}")
-    print("=" * 60)
-
-    # 保存详细结果
-    result_path = os.path.join(TrainingConfig.OUTPUT_BASE_DIR, "judge_results.json")
-    with open(result_path, "w", encoding="utf-8") as f:
-        json.dump({
-            "test_questions": test_questions,
-            "base_responses": base_responses,
-            "lora_responses": lora_responses,
-            "dora_responses": dora_responses,
-            "judge_scores": judge_results["all_scores"],
-            "avg_scores": judge_results["avg_scores"],
-            "best_counts": judge_results["best_counts"]
-        }, f, ensure_ascii=False, indent=2)
-    print(f"对比结果已保存到: {result_path}")
-
-    print("\n全部流程完成！")
-
 if __name__ == "__main__":
     main() 
